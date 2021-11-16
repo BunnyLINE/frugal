@@ -24,7 +24,7 @@ import (
 // Ensures Execute returns an error if a bad frugal frame is passed.
 func TestClientRegistryBadFrame(t *testing.T) {
 	assert := assert.New(t)
-	registry := newFRegistry()
+	registry := NewFRegistry()
 	assert.Error(registry.Execute([]byte{0}))
 }
 
@@ -32,7 +32,7 @@ func TestClientRegistryBadFrame(t *testing.T) {
 // opID.
 func TestClientRegistryMissingOpID(t *testing.T) {
 	assert := assert.New(t)
-	registry := newFRegistry()
+	registry := NewFRegistry()
 	assert.Error(registry.Execute(basicFrame))
 }
 
@@ -41,7 +41,7 @@ func TestClientRegistryMissingOpID(t *testing.T) {
 func TestClientRegistry(t *testing.T) {
 	assert := assert.New(t)
 	resultC := make(chan []byte, 1)
-	registry := newFRegistry()
+	registry := NewFRegistry()
 	ctx := NewFContext("")
 	opid, err := getOpID(ctx)
 	assert.Nil(err)
@@ -65,7 +65,7 @@ func TestClientRegistry(t *testing.T) {
 	registry.Unregister(ctx)
 	opid, err = getOpID(ctx)
 	assert.Nil(err)
-	_, ok := registry.(*fRegistryImpl).channels[opid]
+	_, ok := registry.(*FRegistryImpl).Channels[opid]
 	assert.False(ok)
 	// But make sure execute sill returns nil when executing a frame with the
 	// same opID (it will just drop the frame)

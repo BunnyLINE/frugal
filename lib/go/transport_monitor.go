@@ -24,11 +24,11 @@ import "time"
 // implements basic reconnect logic with backoffs and max attempts. This can be
 // extended or reimplemented to provide custom logic.
 type FTransportMonitor interface {
-	// OnClosedCleanly is called when the transport is closed cleanly by a call
+	// OnClosedCleanly is called when the transport is Closed_ cleanly by a call
 	// to Close()
 	OnClosedCleanly()
 
-	// OnClosedUncleanly is called when the transport is closed for a reason
+	// OnClosedUncleanly is called when the transport is Closed_ for a reason
 	// *other* than a call to Close(). Returns whether to try reopening the
 	// transport and, if so, how long to wait before making the attempt.
 	OnClosedUncleanly(cause error) (reopen bool, wait time.Duration)
@@ -45,7 +45,7 @@ type FTransportMonitor interface {
 }
 
 // BaseFTransportMonitor is a default monitor implementation that attempts to
-// re-open a closed transport with exponential backoff behavior and a capped
+// re-open a Closed_ transport with exponential backoff behavior and a capped
 // number of retries. Its behavior can be customized by embedding this struct
 // type in a new struct which "overrides" desired callbacks.
 type BaseFTransportMonitor struct {
@@ -65,7 +65,7 @@ func NewDefaultFTransportMonitor() FTransportMonitor {
 	}
 }
 
-// OnClosedUncleanly is called when the transport is closed for a reason
+// OnClosedUncleanly is called when the transport is Closed_ for a reason
 // *other* than a call to Close(). Returns whether to try reopening the
 // transport and, if so, how long to wait before making the attempt.
 func (m *BaseFTransportMonitor) OnClosedUncleanly(cause error) (bool, time.Duration) {
@@ -88,7 +88,7 @@ func (m *BaseFTransportMonitor) OnReopenFailed(prevAttempts uint, prevWait time.
 	return true, nextWait
 }
 
-// OnClosedCleanly is called when the transport is closed cleanly by a call
+// OnClosedCleanly is called when the transport is Closed_ cleanly by a call
 // to Close()
 func (m *BaseFTransportMonitor) OnClosedCleanly() {}
 
@@ -119,13 +119,13 @@ func (r *monitorRunner) run() {
 
 // Handle a clean close of the transport.
 func (r *monitorRunner) handleCleanClose() {
-	logger().Info("frugal: FTransportMonitor signaled FTransport was closed cleanly. Terminating...")
+	logger().Info("frugal: FTransportMonitor signaled FTransport was Closed_ cleanly. Terminating...")
 	r.monitor.OnClosedCleanly()
 }
 
 // Handle an unclean close of the transport.
 func (r *monitorRunner) handleUncleanClose(cause error) bool {
-	logger().Warnf("frugal: FTransportMonitor signaled FTransport was closed uncleanly because: %v", cause)
+	logger().Warnf("frugal: FTransportMonitor signaled FTransport was Closed_ uncleanly because: %v", cause)
 
 	reopen, InitialWait := r.monitor.OnClosedUncleanly(cause)
 	if !reopen {
@@ -136,7 +136,7 @@ func (r *monitorRunner) handleUncleanClose(cause error) bool {
 	return r.attemptReopen(InitialWait)
 }
 
-// Attempt to reopen the uncleanly closed transport.
+// Attempt to reopen the uncleanly Closed_ transport.
 func (r *monitorRunner) attemptReopen(InitialWait time.Duration) bool {
 	wait := InitialWait
 	reopen := true

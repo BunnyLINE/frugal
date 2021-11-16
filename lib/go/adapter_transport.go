@@ -28,7 +28,7 @@ type fAdapterTransportFactory struct{}
 // FTransport implementation that acts as an adapter for thrift.TTransport.
 // This allows TTransports which support blocking reads to work with Frugal by
 // starting a goroutine that reads from the underlying transport and calling
-// the registry on received frames.
+// the Registry on received frames.
 func NewAdapterTransportFactory() FTransportFactory {
 	return &fAdapterTransportFactory{}
 }
@@ -45,17 +45,17 @@ type fAdapterTransport struct {
 	closeSignal        chan struct{}
 	closeChan          chan error
 	monitorCloseSignal chan<- error
-	registry           fRegistry
+	registry           FRegistry
 }
 
 // NewAdapterTransport returns an FTransport which uses the given TTransport
 // for read/write operations in a way that is compatible with Frugal. This
 // allows TTransports which support blocking reads to work with Frugal by
 // starting a goroutine that reads from the underlying transport and calling
-// the registry on received frames.
+// the Registry on received frames.
 func NewAdapterTransport(tr thrift.TTransport) FTransport {
 	return &fAdapterTransport{
-		registry:    newFRegistry(),
+		registry:    NewFRegistry(),
 		transport:   tr,
 		closeSignal: make(chan struct{}, 1),
 	}
@@ -88,10 +88,10 @@ func (f *fAdapterTransport) readLoop() {
 	for {
 		frame, err := f.readFrame(framedTransport)
 		if err != nil {
-			// First check if the transport was closed.
+			// First check if the transport was Closed_.
 			select {
 			case <-f.closeSignal:
-				// Transport was closed.
+				// Transport was Closed_.
 				return
 			default:
 			}
@@ -166,9 +166,9 @@ func (f *fAdapterTransport) close(cause error) error {
 	close(f.closeChan)
 
 	if cause == nil {
-		logger().Debug("frugal: transport closed")
+		logger().Debug("frugal: transport Closed_")
 	} else {
-		logger().Debugf("frugal: transport closed with cause: %s", cause)
+		logger().Debugf("frugal: transport Closed_ with cause: %s", cause)
 	}
 
 	// Signal transport monitor of close.

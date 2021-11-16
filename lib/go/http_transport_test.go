@@ -426,7 +426,7 @@ func TestHTTPTransportOneway(t *testing.T) {
 	err := transport.Oneway(ctx, requestBytes)
 	assert.Nil(err)
 
-	// Make sure nothing is executed on the registry
+	// Make sure nothing is executed on the Registry
 	select {
 	case <-frameC:
 		assert.True(false)

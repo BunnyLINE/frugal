@@ -116,44 +116,44 @@ type FTransportFactory interface {
 	GetTransport(tr thrift.TTransport) FTransport
 }
 
-type fBaseTransport struct {
-	requestSizeLimit uint
-	writeBuffer      bytes.Buffer
-	registry         fRegistry
-	closed           chan error
+type FBaseTransport struct {
+	RequestSizeLimit uint
+	WriteBuffer bytes.Buffer
+	Registry    FRegistry
+	Closed_     chan error
 }
 
-// Initialize a new fBaseTransport
-func newFBaseTransport(requestSizeLimit uint) *fBaseTransport {
-	return &fBaseTransport{
-		requestSizeLimit: requestSizeLimit,
-		registry:         newFRegistry(),
+// Initialize a new FBaseTransport
+func NewFBaseTransport(requestSizeLimit uint) *FBaseTransport {
+	return &FBaseTransport{
+		RequestSizeLimit: requestSizeLimit,
+		Registry:         NewFRegistry(),
 	}
 }
 
-// Intialize the close channels
-func (f *fBaseTransport) Open() {
-	f.closed = make(chan error, 1)
+// Intialize the close Channels
+func (f *FBaseTransport) Open() {
+	f.Closed_ = make(chan error, 1)
 }
 
-// Close the close channels
-func (f *fBaseTransport) Close(cause error) {
+// Close the close Channels
+func (f *FBaseTransport) Close(cause error) {
 	select {
-	case f.closed <- cause:
+	case f.Closed_ <- cause:
 	default:
-		logger().Warnf("frugal: unable to put close error '%s' on fBaseTransport closed channel", cause)
+		logger().Warnf("frugal: unable to put close error '%s' on FBaseTransport Closed_ channel", cause)
 	}
-	close(f.closed)
+	close(f.Closed_)
 }
 
 // Execute a frugal frame (NOTE: this frame must include the frame size).
-func (f *fBaseTransport) ExecuteFrame(frame []byte) error {
-	return f.registry.Execute(frame[4:])
+func (f *FBaseTransport) ExecuteFrame(frame []byte) error {
+	return f.Registry.Execute(frame[4:])
 }
 
-// Closed channel is closed when the FTransport is closed.
-func (f *fBaseTransport) Closed() <-chan error {
-	return f.closed
+// Closed channel is Closed_ when the FTransport is Closed_.
+func (f *FBaseTransport) Closed() <-chan error {
+	return f.Closed_
 }
 
 func prependFrameSize(buf []byte) []byte {

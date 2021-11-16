@@ -43,7 +43,7 @@ type FAsyncCallback func(thrift.TTransport) error
 // RPCs. It does not actually register FAsyncCallbacks but rather has an
 // FProcessor registered with it. When a message is received, it's buffered and
 // passed to the FProcessor to be handled.
-type fRegistry interface {
+type FRegistry interface {
 	// Register a channel for the given Context.
 	Register(ctx FContext, resultC chan []byte) error
 	// Unregister a callback for the given Context.
@@ -55,50 +55,50 @@ type fRegistry interface {
 	dispatch(uint64, []byte) error
 }
 
-type fRegistryImpl struct {
-	mu       sync.RWMutex
-	channels map[uint64]chan []byte
+type FRegistryImpl struct {
+	Mu       sync.RWMutex
+	Channels map[uint64]chan []byte
 }
 
 // NewFRegistry creates a Registry intended for use by Frugal clients.
 // This is only to be called by generated code.
-func newFRegistry() fRegistry {
-	return &fRegistryImpl{channels: make(map[uint64]chan []byte)}
+func NewFRegistry() FRegistry {
+	return &FRegistryImpl{Channels: make(map[uint64]chan []byte)}
 }
 
 // Register a channel for the given Context.
-func (c *fRegistryImpl) Register(ctx FContext, resultC chan []byte) error {
+func (c *FRegistryImpl) Register(ctx FContext, resultC chan []byte) error {
 	// An FContext can be reused for multiple requests. Because of this,
 	// FContext's have a monotonically increasing atomic uint64. We check
-	// the channels map to ensure that request is not still in-flight.
+	// the Channels map to ensure that request is not still in-flight.
 	opID, err := getOpID(ctx)
 
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.Mu.Lock()
+	defer c.Mu.Unlock()
 	if err == nil {
-		_, ok := c.channels[opID]
+		_, ok := c.Channels[opID]
 		if ok {
 			return fmt.Errorf("frugal: context already registered, opid %d is in-flight for another request", opID)
 		}
 	}
-	c.channels[opID] = resultC
+	c.Channels[opID] = resultC
 	return nil
 }
 
 // Unregister a callback for the given Context.
-func (c *fRegistryImpl) Unregister(ctx FContext) {
+func (c *FRegistryImpl) Unregister(ctx FContext) {
 	opID, err := getOpID(ctx)
 	if err != nil {
 		logger().Warnf("Attempted to unregister an FContext with a malformed opid: %s", err)
 		return
 	}
-	c.mu.Lock()
-	delete(c.channels, opID)
-	c.mu.Unlock()
+	c.Mu.Lock()
+	delete(c.Channels, opID)
+	c.Mu.Unlock()
 }
 
 // Execute dispatches a single Thrift message frame.
-func (c *fRegistryImpl) Execute(frame []byte) error {
+func (c *FRegistryImpl) Execute(frame []byte) error {
 	headers, err := getHeadersFromFrame(frame)
 	if err != nil {
 		logger().Warn("frugal: invalid protocol frame headers:", err)
@@ -114,15 +114,15 @@ func (c *fRegistryImpl) Execute(frame []byte) error {
 	return c.dispatch(opid, frame)
 }
 
-func (c *fRegistryImpl) dispatch(opid uint64, frame []byte) error {
-	c.mu.RLock()
-	resultC, ok := c.channels[opid]
+func (c *FRegistryImpl) dispatch(opid uint64, frame []byte) error {
+	c.Mu.RLock()
+	resultC, ok := c.Channels[opid]
 	if !ok {
 		logger().Warn("frugal: unregistered context")
-		c.mu.RUnlock()
+		c.Mu.RUnlock()
 		return nil
 	}
-	c.mu.RUnlock()
+	c.Mu.RUnlock()
 
 	resultC <- frame
 	return nil

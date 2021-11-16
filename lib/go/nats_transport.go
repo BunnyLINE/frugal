@@ -44,7 +44,7 @@ func NewFNatsTransport(conn *nats.Conn, subject, inbox string) FTransport {
 	return &fNatsTransport{
 		// FTransports manually frame messages.
 		// Leave enough room for frame size.
-		fBaseTransport: newFBaseTransport(natsMaxMessageSize - 4),
+		FBaseTransport: NewFBaseTransport(natsMaxMessageSize - 4),
 		conn:           conn,
 		subject:        subject,
 		inbox:          inbox,
@@ -56,7 +56,7 @@ func NewFNatsTransport(conn *nats.Conn, subject, inbox string) FTransport {
 // published to a subject and responses are received on another subject.
 // This assumes requests/responses fit within a single NATS message.
 type fNatsTransport struct {
-	*fBaseTransport
+	*FBaseTransport
 	conn    *nats.Conn
 	subject string
 	inbox   string
@@ -82,7 +82,7 @@ func (f *fNatsTransport) Open() error {
 	}
 	f.sub = sub
 
-	f.fBaseTransport.Open()
+	f.FBaseTransport.Open()
 	return nil
 }
 
@@ -106,11 +106,11 @@ func (f *fNatsTransport) handler(msg *nats.Msg) {
 }
 
 func (f *fNatsTransport) handleServiceNotAvailable(opId uint64) {
-	f.registry.dispatch(opId, serviceNotAvailable)
+	f.Registry.dispatch(opId, serviceNotAvailable)
 }
 
 func (f *fNatsTransport) handleOpResponse(frame []byte) {
-	if err := f.fBaseTransport.ExecuteFrame(frame); err != nil {
+	if err := f.FBaseTransport.ExecuteFrame(frame); err != nil {
 		logger().Warn("Could not execute frame", err)
 	}
 }
@@ -130,7 +130,7 @@ func (f *fNatsTransport) Close() error {
 	}
 	f.sub = nil
 
-	f.fBaseTransport.Close(nil)
+	f.FBaseTransport.Close(nil)
 	return nil
 }
 
@@ -176,10 +176,10 @@ func (f *fNatsTransport) Request(ctx FContext, data []byte) (thrift.TTransport, 
 		return nil, nil
 	}
 
-	if err := f.registry.Register(ctx, resultC); err != nil {
+	if err := f.Registry.Register(ctx, resultC); err != nil {
 		return nil, thrift.NewTTransportException(TRANSPORT_EXCEPTION_UNKNOWN, err.Error())
 	}
-	defer f.registry.Unregister(ctx)
+	defer f.Registry.Unregister(ctx)
 
 	if err := f.checkMessageSize(data); err != nil {
 		return nil, err

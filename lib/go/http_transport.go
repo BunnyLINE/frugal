@@ -191,7 +191,7 @@ func (h *FHTTPTransportBuilder) WithRequestHeadersFromFContext(getRequestHeaders
 // Build a new configured HTTP FTransport.
 func (h *FHTTPTransportBuilder) Build() FTransport {
 	return &fHTTPTransport{
-		fBaseTransport:    newFBaseTransport(h.requestSizeLimit),
+		FBaseTransport:    NewFBaseTransport(h.requestSizeLimit),
 		client:            h.client,
 		url:               h.url,
 		responseSizeLimit: h.responseSizeLimit,
@@ -206,7 +206,7 @@ func (h *FHTTPTransportBuilder) Build() FTransport {
 // http response. This assumes requests/responses fit within a single http
 // request.
 type fHTTPTransport struct {
-	*fBaseTransport
+	*FBaseTransport
 	client            *http.Client
 	url               string
 	responseSizeLimit uint
@@ -253,10 +253,10 @@ func (h *fHTTPTransport) Request(ctx FContext, data []byte) (thrift.TTransport, 
 		return nil, nil
 	}
 
-	if h.requestSizeLimit > 0 && len(data) > int(h.requestSizeLimit) {
+	if h.RequestSizeLimit > 0 && len(data) > int(h.RequestSizeLimit) {
 		return nil, thrift.NewTTransportException(
 			TRANSPORT_EXCEPTION_REQUEST_TOO_LARGE,
-			fmt.Sprintf("Message exceeds %d bytes, was %d bytes", h.requestSizeLimit, len(data)))
+			fmt.Sprintf("Message exceeds %d bytes, was %d bytes", h.RequestSizeLimit, len(data)))
 	}
 
 	// Make the HTTP request
@@ -297,7 +297,7 @@ func (h *fHTTPTransport) Request(ctx FContext, data []byte) (thrift.TTransport, 
 // transmitted. Returns a non-positive number to indicate an unbounded
 // allowable size.
 func (h *fHTTPTransport) GetRequestSizeLimit() uint {
-	return h.requestSizeLimit
+	return h.RequestSizeLimit
 }
 
 // This is a no-op for fHTTPTransport

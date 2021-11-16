@@ -152,7 +152,7 @@ func TestAdapterTransportReadError(t *testing.T) {
 	mockTr.AssertExpectations(t)
 }
 
-// Ensures the read loop closes the transport when registry execute encounters
+// Ensures the read loop closes the transport when Registry execute encounters
 // an error.
 func TestAdapterTransportExecuteError(t *testing.T) {
 	assert := assert.New(t)
@@ -212,7 +212,7 @@ func TestAdapterTransportCloseError(t *testing.T) {
 	assert.Equal(err, tr.Close())
 	select {
 	case <-tr.Closed():
-		t.Fatal("Transport should not have closed")
+		t.Fatal("Transport should not have Closed_")
 	default:
 	}
 

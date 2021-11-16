@@ -386,7 +386,7 @@ func (m *mockFTransport) Close() error {
 	return args.Error(0)
 }
 
-func (m *mockFTransport) SetRegistry(fr fRegistry) {
+func (m *mockFTransport) SetRegistry(fr FRegistry) {
 	m.Lock()
 	defer m.Unlock()
 	m.Called(fr)

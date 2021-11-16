@@ -108,7 +108,7 @@ func TestNatsTransportOpen(t *testing.T) {
 		registered: make(chan uint64, 1),
 	}
 	registry.Register(NewFContext(""), frameC)
-	tr.registry = registry
+	tr.Registry = registry
 
 	sizedFrame := prependFrameSize(frame)
 	assert.Nil(t, conn.Publish(tr.inbox+".1", sizedFrame))
@@ -137,7 +137,7 @@ func TestNatsTransportRequestTooLarge(t *testing.T) {
 	_, err := tr.Request(NewFContext(""), buff)
 	assert.True(t, IsErrTooLarge(err))
 	assert.Equal(t, TRANSPORT_EXCEPTION_REQUEST_TOO_LARGE, err.(thrift.TTransportException).TypeId())
-	assert.Equal(t, 0, tr.writeBuffer.Len())
+	assert.Equal(t, 0, tr.WriteBuffer.Len())
 }
 
 // Ensures Request returns a NOT_OPEN TTransportException if the transport is not
@@ -289,9 +289,9 @@ func TestServiceUnavailable(t *testing.T) {
 		opIdInt, _ := strconv.ParseInt(opId, 10, 64)
 		var found bool
 		for !found {
-			tr.registry.(*fRegistryImpl).mu.RLock()
-			_, found = tr.registry.(*fRegistryImpl).channels[uint64(opIdInt)]
-			tr.registry.(*fRegistryImpl).mu.RUnlock()
+			tr.Registry.(*FRegistryImpl).Mu.RLock()
+			_, found = tr.Registry.(*FRegistryImpl).Channels[uint64(opIdInt)]
+			tr.Registry.(*FRegistryImpl).Mu.RUnlock()
 			runtime.Gosched()
 		}
 		tr.handler(&nats.Msg{

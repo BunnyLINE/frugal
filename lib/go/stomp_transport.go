@@ -291,7 +291,7 @@ func (m *fStompSubscriberTransport) processMessages() {
 		case message, ok := <-m.sub.C:
 			logger().Debugf("frugal: received stomp message on topic '%s'", m.topic)
 			if !ok {
-				logger().Errorf("frugal: error processing subscription messages, message channel closed")
+				logger().Errorf("frugal: error processing subscription messages, message channel Closed_")
 				return
 			}
 
